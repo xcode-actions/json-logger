@@ -135,21 +135,24 @@ public struct JSONLogger : LogHandler {
 		else                                         {effectiveJSONMetadata = jsonMetadataCache}
 		
 		/* We compute the data to print outside of the lock. */
-		let line = LogLine(level: level, message: message.description, metadata: effectiveJSONMetadata,
-								 label: label, source: source, file: file, function: function, line: line)
+		let logLine = LogLine(level: level, message: message.description, metadata: effectiveJSONMetadata, date: Date(),
+									 label: label, source: source, file: file, function: function, line: line)
 		let jsonLine: Data
-		do    {jsonLine = try jsonEncoder.encode(line)}
+		do    {jsonLine = try jsonEncoder.encode(logLine)}
 		catch {
-			/* The encoding should never fail.
-			 * But what if it does? */
+			/* If encoding the line failed, we fallback to a manual building of the JSON.
+			 * For the date, we cannot know how the client would want the date to be encoded as we cannot use the JSONEncoder,
+			 *  so we use a special property LogLine will use when the date property is not present.
+			 * This “date-1970” contains the date, represented using the time interval since 1970. */
 			jsonLine = Data((
 				#"{"# +
 					#""level":"\#(level.rawValue.safifyForJSON())","# +
-					#""message":"MANGLED LOG MESSAGE (see JSONLogger doc) -- \#(line.message.safifyForJSON())","# +
+					#""message":"MANGLED LOG MESSAGE (see JSONLogger doc) -- \#(logLine.message.safifyForJSON())","# +
 					#""metadata":{"# +
 						#""JSONLogger.LogInfo":"Original metadata removed (see JSONLogger doc)","# +
 						#""JSONLogger.LogError":"\#(String(describing: error).safifyForJSON())""# +
 					#"},"# +
+					#""date-1970":\#(logLine.date.timeIntervalSince1970),"# +
 					#""label":"\#(label.safifyForJSON())","# +
 					#""source":"\#(source.safifyForJSON())","# +
 					#""file":"\#(file.safifyForJSON())","# +
