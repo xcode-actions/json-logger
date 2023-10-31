@@ -8,7 +8,7 @@ import Logging
 final class JSONLoggerTests: XCTestCase {
 	
 	override class func setUp() {
-		LoggingSystem.bootstrap{ _ in JSONLogger() }
+		LoggingSystem.bootstrap{ JSONLogger(label: $0) }
 	}
 	
 	/* From <https://apple.github.io/swift-log/docs/current/Logging/Protocols/LogHandler.html#treat-log-level-amp-metadata-as-values>. */
@@ -27,5 +27,11 @@ final class JSONLoggerTests: XCTestCase {
 		XCTAssertEqual("second", logger2[metadataKey: "only-on"])
 	}
 	
+	func testVisual1() {
+		XCTAssertTrue(true, "We only want to see how the log look, so please see the logs.")
+		
+		let logger = Logger(label: "my logger")
+		logger.info("First log message using JSONLogger")
+	}
 	
 }

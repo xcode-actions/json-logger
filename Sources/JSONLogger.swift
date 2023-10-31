@@ -44,6 +44,8 @@ public struct JSONLogger : LogHandler {
 	}
 	public var metadataProvider: Logger.MetadataProvider?
 	
+	public let label: String
+	
 	public let outputFileDescriptor: FileDescriptor
 	public let lineSeparator: Data
 	public let prefix: Data
@@ -54,11 +56,12 @@ public struct JSONLogger : LogHandler {
 	 If the encoding fails or this property is set to `false` the String value will be used. */
 	public var tryEncodingStringConvertibles: Bool
 	
-	public static func forJSONSeq(on fd: FileDescriptor = .standardError, metadataProvider: Logger.MetadataProvider? = LoggingSystem.metadataProvider) -> Self {
-		return Self(fd: fd, lineSeparator: Data(), prefix: Data([0x1e]), suffix: Data([0x0a]), metadataProvider: metadataProvider)
+	public static func forJSONSeq(on fd: FileDescriptor = .standardError, label: String, metadataProvider: Logger.MetadataProvider? = LoggingSystem.metadataProvider) -> Self {
+		return Self(label: label, fd: fd, lineSeparator: Data(), prefix: Data([0x1e]), suffix: Data([0x0a]), metadataProvider: metadataProvider)
 	}
 	
-	public init(fd: FileDescriptor = .standardError, lineSeparator: Data = Data("\n".utf8), prefix: Data = Data(), suffix: Data = Data(), tryEncodingStringConvertibles: Bool = true, metadataProvider: Logger.MetadataProvider? = LoggingSystem.metadataProvider) {
+	public init(label: String, fd: FileDescriptor = .standardError, lineSeparator: Data = Data("\n".utf8), prefix: Data = Data(), suffix: Data = Data(), tryEncodingStringConvertibles: Bool = true, metadataProvider: Logger.MetadataProvider? = LoggingSystem.metadataProvider) {
+		self.label = label
 		self.outputFileDescriptor = fd
 		self.lineSeparator = lineSeparator
 		self.prefix = prefix
@@ -80,7 +83,7 @@ public struct JSONLogger : LogHandler {
 		
 		/* We compute the data to print outside of the lock. */
 		let line = LogLine(level: level, message: message.description, metadata: effectiveJSONMetadata,
-								 source: source, file: file, function: function, line: line)
+								 label: label, source: source, file: file, function: function, line: line)
 		let jsonLine: Data
 		do    {jsonLine = try JSONEncoder().encode(line)}
 		catch {
@@ -94,6 +97,7 @@ public struct JSONLogger : LogHandler {
 						#""JSONLogger.LogInfo":"Original metadata removed (see JSONLogger doc)","# +
 						#""JSONLogger.LogError":"\#(String(describing: error).safifyForJSON())""# +
 					#"},"# +
+					#""label":"\#(label.safifyForJSON())","# +
 					#""source":"\#(source.safifyForJSON())","# +
 					#""file":"\#(file.safifyForJSON())","# +
 					#""function":"\#(function.safifyForJSON())","# +
