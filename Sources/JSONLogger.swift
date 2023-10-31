@@ -89,7 +89,7 @@ public struct JSONLogger : LogHandler {
 	public let jsonCodersForStringConvertibles: (JSONEncoder, JSONDecoder)?
 	
 	public static func forJSONSeq(
-		on fd: FileDescriptor = .standardError,
+		on fd: FileDescriptor = .standardOutput,
 		label: String,
 		jsonEncoder: JSONEncoder = Self.defaultJSONEncoder,
 		jsonCodersForStringConvertibles: (JSONEncoder, JSONDecoder) = Self.defaultJSONCodersForStringConvertibles,
@@ -107,7 +107,7 @@ public struct JSONLogger : LogHandler {
 	
 	public init(
 		label: String,
-		fd: FileDescriptor = .standardError,
+		fd: FileDescriptor = .standardOutput,
 		lineSeparator: Data = Data("\n".utf8), prefix: Data = Data(), suffix: Data = Data(),
 		jsonEncoder: JSONEncoder = Self.defaultJSONEncoder,
 		jsonCodersForStringConvertibles: (JSONEncoder, JSONDecoder) = Self.defaultJSONCodersForStringConvertibles,
