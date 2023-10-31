@@ -1,7 +1,14 @@
+import Foundation
+#if canImport(System)
+import System
+#else
+import SystemPackage
+#endif
 import XCTest
-@testable import JSONLogger
 
 import Logging
+
+@testable import JSONLogger
 
 
 
@@ -27,11 +34,25 @@ final class JSONLoggerTests: XCTestCase {
 		XCTAssertEqual("second", logger2[metadataKey: "only-on"])
 	}
 	
-	func testVisual1() {
-		XCTAssertTrue(true, "We only want to see how the log look, so please see the logs.")
-		
-		let logger = Logger(label: "my logger")
-		logger.info("First log message using JSONLogger")
+	/* Must be the first test. */
+	func test0NoSeparatorForFirstLog() throws {
+		/* We do not init the JSONLogger using Logger because we want to test multiple configurations
+		 *  which is not possible using LoggingSystem as the bootstrap can only be done once. */
+		let pipe = Pipe()
+		let jsonLogger = JSONLogger(label: "best-logger", fd: FileDescriptor(rawValue: pipe.fileHandleForWriting.fileDescriptor))
+		jsonLogger.log(level: .info, message: "First log message", metadata: nil, source: "dummy-source", file: "dummy-file", function: "dummy-function", line: 42)
+		try pipe.fileHandleForWriting.close()
+		let data = try pipe.fileHandleForReading.readToEnd() ?? Data()
+		XCTAssertEqual(data.first, 0x7b)
+	}
+	
+	func testSeparatorForNotFirstLog() throws {
+		let pipe = Pipe()
+		let jsonLogger = JSONLogger(label: "best-logger", fd: FileDescriptor(rawValue: pipe.fileHandleForWriting.fileDescriptor))
+		jsonLogger.log(level: .info, message: "Not first log message", metadata: nil, source: "dummy-source", file: "dummy-file", function: "dummy-function", line: 42)
+		try pipe.fileHandleForWriting.close()
+		let data = try pipe.fileHandleForReading.readToEnd() ?? Data()
+		XCTAssertEqual(data.first, 0x0a)
 	}
 	
 }
