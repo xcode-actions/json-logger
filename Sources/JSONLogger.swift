@@ -44,10 +44,10 @@ public struct JSONLogger : LogHandler {
 	}
 	public var metadataProvider: Logger.MetadataProvider?
 	
-	public var outputFileDescriptor: FileDescriptor
-	public var lineSeparator: Data
-	public var prefix: Data
-	public var suffix: Data
+	public let outputFileDescriptor: FileDescriptor
+	public let lineSeparator: Data
+	public let prefix: Data
+	public let suffix: Data
 	
 	/**
 	 If `true`, the `Encodable` properties in the metadata will be encoded and kept structured in the resulting log line.
