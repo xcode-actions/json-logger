@@ -82,13 +82,27 @@ public struct JSONLogger : LogHandler {
 	public let prefix: Data
 	public let suffix: Data
 	
+	public let jsonEncoder: JSONEncoder
 	/**
 	 If non-`nil`, the `Encodable` stringConvertible properties in the metadata will be encoded as `JSON` using the `JSONEncoder` and `JSONDecoder`.
 	 If the encoding fails or this property is set to `nil` the String value will be used. */
-	public var jsonCodersForStringConvertibles: (JSONEncoder, JSONDecoder)?
+	public let jsonCodersForStringConvertibles: (JSONEncoder, JSONDecoder)?
 	
-	public static func forJSONSeq(on fd: FileDescriptor = .standardError, label: String, metadataProvider: Logger.MetadataProvider? = LoggingSystem.metadataProvider) -> Self {
-		return Self(label: label, fd: fd, lineSeparator: Data(), prefix: Data([0x1e]), suffix: Data([0x0a]), metadataProvider: metadataProvider)
+	public static func forJSONSeq(
+		on fd: FileDescriptor = .standardError,
+		label: String,
+		jsonEncoder: JSONEncoder = Self.defaultJSONEncoder,
+		jsonCodersForStringConvertibles: (JSONEncoder, JSONDecoder) = Self.defaultJSONCodersForStringConvertibles,
+		metadataProvider: Logger.MetadataProvider? = LoggingSystem.metadataProvider
+	) -> Self {
+		return Self(
+			label: label,
+			fd: fd,
+			lineSeparator: Data(), prefix: Data([0x1e]), suffix: Data([0x0a]),
+			jsonEncoder: jsonEncoder,
+			jsonCodersForStringConvertibles: jsonCodersForStringConvertibles,
+			metadataProvider: metadataProvider
+		)
 	}
 	
 	public init(
@@ -104,6 +118,7 @@ public struct JSONLogger : LogHandler {
 		self.lineSeparator = lineSeparator
 		self.prefix = prefix
 		self.suffix = suffix
+		self.jsonEncoder = jsonEncoder
 		self.jsonCodersForStringConvertibles = jsonCodersForStringConvertibles
 		
 		self.metadataProvider = metadataProvider
@@ -123,7 +138,7 @@ public struct JSONLogger : LogHandler {
 		let line = LogLine(level: level, message: message.description, metadata: effectiveJSONMetadata,
 								 label: label, source: source, file: file, function: function, line: line)
 		let jsonLine: Data
-		do    {jsonLine = try JSONEncoder().encode(line)}
+		do    {jsonLine = try jsonEncoder.encode(line)}
 		catch {
 			/* The encoding should never fail.
 			 * But what if it does? */
