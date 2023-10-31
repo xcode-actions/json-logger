@@ -27,7 +27,7 @@ import Logging
  
  This configuration is interesting mostly to generate `json-seq` stream.
  To do this, set the inter-JSON separator to `[]`, the prefix to `[0x1e]` and the suffix to `[0x0a]`,
-  or use the convenience ``JSONLogger/forJSONSeq()``.
+  or use the convenience ``forJSONSeq(on:label:metadataProvider:)``.
  
  Finally, another interesting configuration is to set the separator to `[0xff]` or `[0xfe]`.
  These bytes should not appear in valid UTF-8 strings and should be able to be used to separate JSON payloads.
@@ -36,6 +36,37 @@ import Logging
  
  The output file descriptor is also customizable and is `stdout` by default. */
 public struct JSONLogger : LogHandler {
+	
+	public static let defaultJSONEncoder: JSONEncoder = {
+		let res = JSONEncoder()
+		res.outputFormatting = [.withoutEscapingSlashes]
+		res.keyEncodingStrategy = .useDefaultKeys
+		res.dateEncodingStrategy = .iso8601
+		res.dataEncodingStrategy = .base64
+		res.nonConformingFloatEncodingStrategy = .convertToString(positiveInfinity: "+inf", negativeInfinity: "-inf", nan: "nan")
+		return res
+	}()
+	
+	public static let defaultJSONCodersForStringConvertibles: (JSONEncoder, JSONDecoder) = {
+		let encoder = JSONEncoder()
+		encoder.outputFormatting = [.withoutEscapingSlashes]
+		encoder.keyEncodingStrategy = .useDefaultKeys
+		encoder.dateEncodingStrategy = .iso8601
+		encoder.dataEncodingStrategy = .base64
+		encoder.nonConformingFloatEncodingStrategy = .throw
+		let decoder = JSONDecoder()
+		if #available(macOS 12.0, tvOS 15.0, iOS 15.0, watchOS 8.0, *) {
+			decoder.allowsJSON5 = false
+		}
+		decoder.keyDecodingStrategy = .useDefaultKeys
+		decoder.dateDecodingStrategy = .iso8601
+		decoder.dataDecodingStrategy = .base64
+		if #available(macOS 12.0, tvOS 15.0, iOS 15.0, watchOS 8.0, *) {
+			decoder.assumesTopLevelDictionary = false
+		}
+		decoder.nonConformingFloatDecodingStrategy = .throw
+		return (encoder, decoder)
+	}()
 	
 	public var logLevel: Logger.Level = .info
 	
@@ -52,21 +83,28 @@ public struct JSONLogger : LogHandler {
 	public let suffix: Data
 	
 	/**
-	 If `true`, the `Encodable` properties in the metadata will be encoded and kept structured in the resulting log line.
-	 If the encoding fails or this property is set to `false` the String value will be used. */
-	public var tryEncodingStringConvertibles: Bool
+	 If non-`nil`, the `Encodable` stringConvertible properties in the metadata will be encoded as `JSON` using the `JSONEncoder` and `JSONDecoder`.
+	 If the encoding fails or this property is set to `nil` the String value will be used. */
+	public var jsonCodersForStringConvertibles: (JSONEncoder, JSONDecoder)?
 	
 	public static func forJSONSeq(on fd: FileDescriptor = .standardError, label: String, metadataProvider: Logger.MetadataProvider? = LoggingSystem.metadataProvider) -> Self {
 		return Self(label: label, fd: fd, lineSeparator: Data(), prefix: Data([0x1e]), suffix: Data([0x0a]), metadataProvider: metadataProvider)
 	}
 	
-	public init(label: String, fd: FileDescriptor = .standardError, lineSeparator: Data = Data("\n".utf8), prefix: Data = Data(), suffix: Data = Data(), tryEncodingStringConvertibles: Bool = true, metadataProvider: Logger.MetadataProvider? = LoggingSystem.metadataProvider) {
+	public init(
+		label: String,
+		fd: FileDescriptor = .standardError,
+		lineSeparator: Data = Data("\n".utf8), prefix: Data = Data(), suffix: Data = Data(),
+		jsonEncoder: JSONEncoder = Self.defaultJSONEncoder,
+		jsonCodersForStringConvertibles: (JSONEncoder, JSONDecoder) = Self.defaultJSONCodersForStringConvertibles,
+		metadataProvider: Logger.MetadataProvider? = LoggingSystem.metadataProvider
+	) {
 		self.label = label
 		self.outputFileDescriptor = fd
 		self.lineSeparator = lineSeparator
 		self.prefix = prefix
 		self.suffix = suffix
-		self.tryEncodingStringConvertibles = tryEncodingStringConvertibles
+		self.jsonCodersForStringConvertibles = jsonCodersForStringConvertibles
 		
 		self.metadataProvider = metadataProvider
 	}
@@ -164,8 +202,12 @@ extension JSONLogger {
 			case let .array(array):           .array (array     .map      (jsonMetadataValue(_:)))
 			case let .dictionary(dictionary): .object(dictionary.mapValues(jsonMetadataValue(_:)))
 			case let .stringConvertible(s):
-				if tryEncodingStringConvertibles, let c = s as? any Encodable, let encoded = try? JSON(encodable: c) {
-					encoded
+				if let (encoder, decoder) = jsonCodersForStringConvertibles,
+					let c = s as? any Encodable,
+					let data = try? encoder.encode(c),
+					let json = try? decoder.decode(JSON.self, from: data)
+				{
+					json
 				} else {
 					.string(s.description)
 				}
