@@ -13,25 +13,24 @@ import Logging
 /**
  A logger that logs it’s messages to stdout in the JSON format, one log per line.
  
- The line separator is actually customizable, and can be any sequence of bytes.
+ The end of line separator is actually customizable, and can be any sequence of bytes.
  By default it’s “`\n`”.
  
  The separator customization allows you to choose 
   a prefix for the JSON payload (defaults to `[]`),
-  a suffix too (defaults to `[]` too),
-  and an inter-JSON separator (defaults to `[0x0a]`, which is a UNIX newline).
+  a suffix too (defaults to `[0x0a]`, aka. a single UNIX newline),
+  and an inter-JSON separator (defaults to `[]`, same as the prefix).
  For instance if there are two messages logged, you’ll get the following written to the fd:
  ```
  prefix JSON1 suffix separator prefix JSON2 suffix
  ```
  
- This configuration is interesting mostly to generate `json-seq` stream.
- To do this, set the inter-JSON separator to `[]`, the prefix to `[0x1e]` and the suffix to `[0x0a]`,
-  or use the convenience ``forJSONSeq(on:label:metadataProvider:)``.
+ An interesting configuration is setting the prefix to `[0x1e]` and the suffix to `[0x0a]`, which generates a `json-seq` stream.
+ You can use the ``forJSONSeq(on:label:metadataProvider:)`` convenience to get this configuration directly.
  
- Finally, another interesting configuration is to set the separator to `[0xff]` or `[0xfe]`.
+ Another interesting configuration is to set the inter-JSON separator to `[0xff]` or `[0xfe]` (or both).
  These bytes should not appear in valid UTF-8 strings and should be able to be used to separate JSON payloads.
- (Note I’m not sure why `json-seq` does not do that; there must be a good reason, though.
+ (Note I’m not sure why `json-seq` does not do that but there must be a good reason.
  Probably because the resulting output would not be valid UTF-8 anymore.)
  
  The output file descriptor is also customizable and is `stdout` by default. */
@@ -113,7 +112,7 @@ public struct JSONLogger : LogHandler {
 	public init(
 		label: String,
 		fd: FileDescriptor = .standardOutput,
-		lineSeparator: Data = Data("\n".utf8), prefix: Data = Data(), suffix: Data = Data(),
+		lineSeparator: Data = Data(), prefix: Data = Data(), suffix: Data = Data("\n".utf8),
 		jsonEncoder: JSONEncoder = Self.defaultJSONEncoder,
 		jsonCodersForStringConvertibles: (JSONEncoder, JSONDecoder) = Self.defaultJSONCodersForStringConvertibles,
 		metadataProvider: Logger.MetadataProvider? = LoggingSystem.metadataProvider

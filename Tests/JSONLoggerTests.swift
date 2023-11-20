@@ -49,12 +49,12 @@ final class JSONLoggerTests: XCTestCase {
 		XCTAssertEqual("second", logger2[metadataKey: "only-on"])
 	}
 	
-	/* Must be the first test. */
+	/* ⚠️ Must be the first test. */
 	func test0NoSeparatorForFirstLog() throws {
 		/* We do not init the JSONLogger using Logger because we want to test multiple configurations
 		 *  which is not possible using LoggingSystem as the bootstrap can only be done once. */
 		let pipe = Pipe()
-		let jsonLogger = JSONLogger(label: "best-logger", fd: FileDescriptor(rawValue: pipe.fileHandleForWriting.fileDescriptor))
+		let jsonLogger = JSONLogger(label: "best-logger", fd: FileDescriptor(rawValue: pipe.fileHandleForWriting.fileDescriptor), lineSeparator: Data([0x0a]), prefix: Data(), suffix: Data())
 		jsonLogger.log(level: .info, message: "First log message", metadata: nil, source: "dummy-source", file: "dummy-file", function: "dummy-function", line: 42)
 		try pipe.fileHandleForWriting.close()
 		let data = try pipe.fileHandleForReading.readToEnd() ?? Data()
@@ -63,7 +63,7 @@ final class JSONLoggerTests: XCTestCase {
 	
 	func testSeparatorForNotFirstLog() throws {
 		let pipe = Pipe()
-		let jsonLogger = JSONLogger(label: "best-logger", fd: FileDescriptor(rawValue: pipe.fileHandleForWriting.fileDescriptor))
+		let jsonLogger = JSONLogger(label: "best-logger", fd: FileDescriptor(rawValue: pipe.fileHandleForWriting.fileDescriptor), lineSeparator: Data([0x0a]), prefix: Data(), suffix: Data())
 		jsonLogger.log(level: .info, message: "Not first log message", metadata: nil, source: "dummy-source", file: "dummy-file", function: "dummy-function", line: 42)
 		try pipe.fileHandleForWriting.close()
 		let data = try pipe.fileHandleForReading.readToEnd() ?? Data()
