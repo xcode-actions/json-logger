@@ -33,7 +33,13 @@ import Logging
  (Note I’m not sure why `json-seq` does not do that but there must be a good reason.
  Probably because the resulting output would not be valid UTF-8 anymore.)
  
- The output file descriptor is also customizable and is `stdout` by default. */
+ The output file descriptor is also customizable and is `stdout` by default.
+ 
+ Finally, the JSON coders are customizable too.
+ There is a `JSONEncoder` that create the JSON from a ``LogLine`` entry, which is the struct created internally for any logged line.
+ There is also an optional `(JSONEncoder, JSONDecoder)` tuple which is used specifically to get structured metadata from any object in the metadata.
+ 
+ All of the JSON output from this logger should be parsable as a ``LogLine`` by a `JSONDecoder` matching the config of the `JSONEncoder` set in the config of the logger. */
 public struct JSONLogger : LogHandler {
 	
 	public static let defaultJSONEncoder: JSONEncoder = {
