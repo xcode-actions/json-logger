@@ -171,18 +171,18 @@ public struct JSONLogger : LogHandler {
 				#"}"#
 			).utf8)
 		}
-		let dataNoSeparator = prefix + jsonLine + suffix
+		let lineDataNoSeparator = prefix + jsonLine + suffix
 		
 		/* We lock, because the writeAll function might split the write in more than 1 write
 		 *  (if the write system call only writes a part of the data).
 		 * If another part of the program writes to fd, we might get interleaved data,
 		 *  because they cannot be aware of our lock (and we cannot be aware of theirs if they have one). */
 		JSONLogger.lock.withLock{
-			let prefix: Data
-			if Self.isFirstLog {prefix = Data(); Self.isFirstLog = false}
-			else               {prefix = lineSeparator}
+			let interLogData: Data
+			if Self.isFirstLog {interLogData = Data(); Self.isFirstLog = false}
+			else               {interLogData = lineSeparator}
 			/* Is there a better idea than silently drop the message in case of fail? */
-			_ = try? outputFileDescriptor.writeAll(prefix + dataNoSeparator)
+			_ = try? outputFileDescriptor.writeAll(interLogData + lineDataNoSeparator)
 		}
 	}
 	
