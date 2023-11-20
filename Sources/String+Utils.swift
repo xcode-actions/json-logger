@@ -12,7 +12,7 @@ internal extension String {
 				case #"""#: return #"\""#
 				case "\n": return #"\n"#
 				case "\r": return #"\r"#
-				/* `scalar.value` should never be bigger than Int32.max, but we still use bitPattern to be safe. */
+				/* `scalar.value` should never be bigger than Int32.max, but we still use bitPattern not to crash if it is. */
 				case _ where isprint(Int32(bitPattern: scalar.value)) == 0: return "-"
 				default: return String(scalar)
 			}
