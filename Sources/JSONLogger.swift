@@ -187,9 +187,14 @@ public struct JSONLogger : LogHandler {
 	}
 	
 	/* Do _not_ use os_unfair_lock, apparently it is bad in Swift:
-	 *  <https://twitter.com/grynspan/status/1392080373752995849>. */
-	private static var lock = NSLock()
+	 *  <https://twitter.com/grynspan/status/1392080373752995849>.
+	 * And OSAllocatedUnfairLock is not available on Linux. */
+	private static let lock = NSLock()
+#if swift(>=5.10)
+	private static nonisolated(unsafe) var isFirstLog = true
+#else
 	private static var isFirstLog = true
+#endif
 	
 	private var jsonMetadataCache: JSON = .object([:])
 	

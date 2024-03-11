@@ -2,6 +2,11 @@
 import PackageDescription
 
 
+let commonSwiftSettings: [SwiftSetting] = [
+	/* Set swift-tools-version to 5.8 to have this available. */
+//	.enableExperimentalFeature("StrictConcurrency")
+]
+
 let package = Package(
 	name: "json-logger",
 	platforms: [
@@ -31,7 +36,7 @@ let package = Package(
 			ret.append(.product(name: "SystemPackage", package: "swift-system"))
 #endif
 			return ret
-		}(), path: "Sources"),
-		.testTarget(name: "JSONLoggerTests", dependencies: ["JSONLogger"], path: "Tests")
+		}(), path: "Sources", swiftSettings: commonSwiftSettings),
+		.testTarget(name: "JSONLoggerTests", dependencies: ["JSONLogger"], path: "Tests", swiftSettings: commonSwiftSettings)
 	]
 )
