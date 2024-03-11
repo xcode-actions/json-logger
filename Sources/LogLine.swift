@@ -1,6 +1,6 @@
 import Foundation
 
-@preconcurrency import GenericJSON
+import GenericJSON
 import Logging
 
 

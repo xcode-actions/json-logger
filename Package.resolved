@@ -3,11 +3,11 @@
     "pins": [
       {
         "package": "GenericJSON",
-        "repositoryURL": "https://github.com/iwill/generic-json-swift.git",
+        "repositoryURL": "https://github.com/Frizlab/generic-json.git",
         "state": {
           "branch": null,
-          "revision": "0a06575f4038b504e78ac330913d920f1630f510",
-          "version": "2.0.2"
+          "revision": "ebf26e8139e4b6c60a39e35f72d0c7753cba507f",
+          "version": "3.0.0"
         }
       },
       {

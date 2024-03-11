@@ -5,7 +5,7 @@ import System
 import SystemPackage
 #endif
 
-@preconcurrency import GenericJSON
+import GenericJSON
 import Logging
 
 

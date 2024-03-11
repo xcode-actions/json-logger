@@ -15,17 +15,17 @@ let package = Package(
 	],
 	dependencies: {
 		var ret = [Package.Dependency]()
-		ret.append(.package(url: "https://github.com/apple/swift-log.git",          from: "1.5.1"))
+		ret.append(.package(url: "https://github.com/apple/swift-log.git",      from: "1.5.1"))
 #if !canImport(System)
-		ret.append(.package(url: "https://github.com/apple/swift-system.git",       from: "1.0.0"))
+		ret.append(.package(url: "https://github.com/apple/swift-system.git",   from: "1.0.0"))
 #endif
-		ret.append(.package(url: "https://github.com/iwill/generic-json-swift.git", from: "2.0.2"))
+		ret.append(.package(url: "https://github.com/Frizlab/generic-json.git", from: "3.0.0"))
 		return ret
 	}(),
 	targets: [
 		.target(name: "JSONLogger", dependencies: {
 			var ret = [Target.Dependency]()
-			ret.append(.product(name: "GenericJSON",   package: "generic-json-swift"))
+			ret.append(.product(name: "GenericJSON",   package: "generic-json"))
 			ret.append(.product(name: "Logging",       package: "swift-log"))
 #if !canImport(System)
 			ret.append(.product(name: "SystemPackage", package: "swift-system"))
