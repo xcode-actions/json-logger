@@ -12,7 +12,7 @@ import Logging
 
 
 
-final class JSONLoggerTests: XCTestCase {
+final class JSONLoggerTests : XCTestCase {
 	
 	public static let defaultJSONDecoder: JSONDecoder = {
 		let res = JSONDecoder()
