@@ -1,10 +1,9 @@
-// swift-tools-version:5.3
+// swift-tools-version:5.8
 import PackageDescription
 
 
-let commonSwiftSettings: [SwiftSetting] = [
-	/* Set swift-tools-version to 5.8 to have this available. */
-//	.enableExperimentalFeature("StrictConcurrency")
+let swiftSettings: [SwiftSetting] = [
+	.enableExperimentalFeature("StrictConcurrency")
 ]
 
 let package = Package(
@@ -26,7 +25,7 @@ let package = Package(
 		.target(name: "JSONLogger", dependencies: [
 			.product(name: "GenericJSON",   package: "generic-json"),
 			.product(name: "Logging",       package: "swift-log"),
-		], path: "Sources", swiftSettings: commonSwiftSettings),
-		.testTarget(name: "JSONLoggerTests", dependencies: ["JSONLogger"], path: "Tests", swiftSettings: commonSwiftSettings)
+		], path: "Sources", swiftSettings: swiftSettings),
+		.testTarget(name: "JSONLoggerTests", dependencies: ["JSONLogger"], path: "Tests", swiftSettings: swiftSettings)
 	]
 )
