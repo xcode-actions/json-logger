@@ -228,19 +228,19 @@ extension JSONLogger {
 	}
 	
 	private func jsonMetadataValue(_ metadataValue: Logger.MetadataValue) -> JSON {
-		return switch metadataValue {
-			case let .string(s):              .string(s)
-			case let .array(array):           .array (array     .map      (jsonMetadataValue(_:)))
-			case let .dictionary(dictionary): .object(dictionary.mapValues(jsonMetadataValue(_:)))
+		switch metadataValue {
+			case let .string(s):              return .string(s)
+			case let .array(array):           return .array (array     .map      (jsonMetadataValue(_:)))
+			case let .dictionary(dictionary): return .object(dictionary.mapValues(jsonMetadataValue(_:)))
 			case let .stringConvertible(s):
 				if let (encoder, decoder) = jsonCodersForStringConvertibles,
 					let c = s as? any Encodable,
 					let data = try? encoder.encode(c),
 					let json = try? decoder.decode(JSON.self, from: data)
 				{
-					json
+					return json
 				} else {
-					.string(s.description)
+					return .string(s.description)
 				}
 		}
 		
