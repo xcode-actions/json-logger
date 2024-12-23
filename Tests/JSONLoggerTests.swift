@@ -1,9 +1,4 @@
 import Foundation
-#if canImport(System)
-import System
-#else
-import SystemPackage
-#endif
 import XCTest
 
 import Logging
@@ -54,7 +49,7 @@ final class JSONLoggerTests : XCTestCase {
 		/* We do not init the JSONLogger using Logger because we want to test multiple configurations
 		 *  which is not possible using LoggingSystem as the bootstrap can only be done once. */
 		let pipe = Pipe()
-		let jsonLogger = JSONLogger(label: "best-logger", fd: FileDescriptor(rawValue: pipe.fileHandleForWriting.fileDescriptor), lineSeparator: Data([0x0a]), prefix: Data(), suffix: Data())
+		let jsonLogger = JSONLogger(label: "best-logger", fileHandle: pipe.fileHandleForWriting, lineSeparator: Data([0x0a]), prefix: Data(), suffix: Data())
 		jsonLogger.log(level: .info, message: "First log message", metadata: nil, source: "dummy-source", file: "dummy-file", function: "dummy-function", line: 42)
 		try pipe.fileHandleForWriting.close()
 		let data = try pipe.fileHandleForReading.readToEnd() ?? Data()
@@ -63,7 +58,7 @@ final class JSONLoggerTests : XCTestCase {
 	
 	func testSeparatorForNotFirstLog() throws {
 		let pipe = Pipe()
-		let jsonLogger = JSONLogger(label: "best-logger", fd: FileDescriptor(rawValue: pipe.fileHandleForWriting.fileDescriptor), lineSeparator: Data([0x0a]), prefix: Data(), suffix: Data())
+		let jsonLogger = JSONLogger(label: "best-logger", fileHandle: pipe.fileHandleForWriting, lineSeparator: Data([0x0a]), prefix: Data(), suffix: Data())
 		jsonLogger.log(level: .info, message: "Not first log message", metadata: nil, source: "dummy-source", file: "dummy-file", function: "dummy-function", line: 42)
 		try pipe.fileHandleForWriting.close()
 		let data = try pipe.fileHandleForReading.readToEnd() ?? Data()
@@ -78,7 +73,7 @@ final class JSONLoggerTests : XCTestCase {
 		let ref = LogLine(level: .info, message: "Not first log message", metadata: .object(["yolo": .object(["val": .number(21)])]), date: Date(), label: "best-logger", source: "dummy-source", file: "dummy-file", function: "dummy-function", line: 42)
 		
 		let pipe = Pipe()
-		let jsonLogger = JSONLogger(label: "best-logger", fd: FileDescriptor(rawValue: pipe.fileHandleForWriting.fileDescriptor))
+		let jsonLogger = JSONLogger(label: "best-logger", fileHandle: pipe.fileHandleForWriting)
 		jsonLogger.log(level: ref.level, message: "\(ref.message)", metadata: ["yolo": .stringConvertible(BestStruct(val: 21))], source: ref.source, file: ref.file, function: ref.function, line: ref.line)
 		try pipe.fileHandleForWriting.close()
 		let data = try pipe.fileHandleForReading.readToEnd() ?? Data()
@@ -108,7 +103,7 @@ final class JSONLoggerTests : XCTestCase {
 		}()
 		
 		let pipe = Pipe()
-		let jsonLogger = JSONLogger(label: "best-logger", fd: FileDescriptor(rawValue: pipe.fileHandleForWriting.fileDescriptor), jsonEncoder: failEncoder)
+		let jsonLogger = JSONLogger(label: "best-logger", fileHandle: pipe.fileHandleForWriting, jsonEncoder: failEncoder)
 		jsonLogger.log(level: ref.level, message: "\(ref.message)", metadata: ["yolo": .stringConvertible(BestStruct(val: 21))], source: ref.source, file: ref.file, function: ref.function, line: ref.line)
 		try pipe.fileHandleForWriting.close()
 		let data = try pipe.fileHandleForReading.readToEnd() ?? Data()

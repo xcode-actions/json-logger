@@ -1,9 +1,4 @@
 import Foundation
-#if canImport(System)
-import System
-#else
-import SystemPackage
-#endif
 
 import GenericJSON
 import Logging
@@ -87,7 +82,7 @@ public struct JSONLogger : LogHandler {
 	
 	public let label: String
 	
-	public let outputFileDescriptor: FileDescriptor
+	public let outputFileHandle: FileHandle
 	public let lineSeparator: Data
 	public let prefix: Data
 	public let suffix: Data
@@ -99,7 +94,7 @@ public struct JSONLogger : LogHandler {
 	public let jsonCodersForStringConvertibles: (JSONEncoder, JSONDecoder)?
 	
 	public static func forJSONSeq(
-		on fd: FileDescriptor = .standardOutput,
+		on fh: FileHandle = .standardOutput,
 		label: String,
 		jsonEncoder: JSONEncoder = Self.defaultJSONEncoder,
 		jsonCodersForStringConvertibles: (JSONEncoder, JSONDecoder) = Self.defaultJSONCodersForStringConvertibles,
@@ -107,7 +102,7 @@ public struct JSONLogger : LogHandler {
 	) -> Self {
 		return Self(
 			label: label,
-			fd: fd,
+			fileHandle: fh,
 			lineSeparator: Data(), prefix: Data([0x1e]), suffix: Data([0x0a]),
 			jsonEncoder: jsonEncoder,
 			jsonCodersForStringConvertibles: jsonCodersForStringConvertibles,
@@ -117,14 +112,14 @@ public struct JSONLogger : LogHandler {
 	
 	public init(
 		label: String,
-		fd: FileDescriptor = .standardOutput,
+		fileHandle: FileHandle = .standardOutput,
 		lineSeparator: Data = Data(), prefix: Data = Data(), suffix: Data = Data("\n".utf8),
 		jsonEncoder: JSONEncoder = Self.defaultJSONEncoder,
 		jsonCodersForStringConvertibles: (JSONEncoder, JSONDecoder) = Self.defaultJSONCodersForStringConvertibles,
 		metadataProvider: Logger.MetadataProvider? = LoggingSystem.metadataProvider
 	) {
 		self.label = label
-		self.outputFileDescriptor = fd
+		self.outputFileHandle = fileHandle
 		self.lineSeparator = lineSeparator
 		self.prefix = prefix
 		self.suffix = suffix
@@ -182,7 +177,10 @@ public struct JSONLogger : LogHandler {
 			if Self.isFirstLog {interLogData = Data(); Self.isFirstLog = false}
 			else               {interLogData = lineSeparator}
 			/* Is there a better idea than silently drop the message in case of fail? */
-			_ = try? outputFileDescriptor.writeAll(interLogData + lineDataNoSeparator)
+			/* Is the write retried on interrupt?
+			 * We’ll assume yes, but we don’t and can’t know for sure
+			 *  until FileHandle has been migrated to the open-source Foundation. */
+			_ = try? outputFileHandle.write(contentsOf: interLogData + lineDataNoSeparator)
 		}
 	}
 	
