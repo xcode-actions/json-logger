@@ -1,25 +1,23 @@
 {
-  "object": {
-    "pins": [
-      {
-        "package": "GenericJSON",
-        "repositoryURL": "https://github.com/Frizlab/generic-json.git",
-        "state": {
-          "branch": null,
-          "revision": "ebf26e8139e4b6c60a39e35f72d0c7753cba507f",
-          "version": "3.0.0"
-        }
-      },
-      {
-        "package": "swift-log",
-        "repositoryURL": "https://github.com/apple/swift-log.git",
-        "state": {
-          "branch": null,
-          "revision": "532d8b529501fb73a2455b179e0bbb6d49b652ed",
-          "version": "1.5.3"
-        }
+  "pins" : [
+    {
+      "identity" : "generic-json",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/Frizlab/generic-json.git",
+      "state" : {
+        "revision" : "bfae33a5e8d31af37b098e46197b49e94d4c0d9a",
+        "version" : "3.1.1"
       }
-    ]
-  },
-  "version": 1
+    },
+    {
+      "identity" : "swift-log",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/apple/swift-log.git",
+      "state" : {
+        "revision" : "96a2f8a0fa41e9e09af4585e2724c4e825410b91",
+        "version" : "1.6.2"
+      }
+    }
+  ],
+  "version" : 2
 }
