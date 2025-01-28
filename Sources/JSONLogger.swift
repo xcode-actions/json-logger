@@ -39,7 +39,9 @@ public struct JSONLogger : LogHandler {
 	
 	public static let defaultJSONEncoder: JSONEncoder = {
 		let res = JSONEncoder()
+#if swift(>=5.2)
 		res.outputFormatting = [.withoutEscapingSlashes]
+#endif
 		res.keyEncodingStrategy = .useDefaultKeys
 		res.dateEncodingStrategy = .iso8601
 		res.dataEncodingStrategy = .base64
@@ -49,7 +51,9 @@ public struct JSONLogger : LogHandler {
 	
 	public static let defaultJSONCodersForStringConvertibles: (JSONEncoder, JSONDecoder) = {
 		let encoder = JSONEncoder()
+#if swift(>=5.2)
 		encoder.outputFormatting = [.withoutEscapingSlashes]
+#endif
 		encoder.keyEncodingStrategy = .useDefaultKeys
 		encoder.dateEncodingStrategy = .iso8601
 		encoder.dataEncodingStrategy = .base64
