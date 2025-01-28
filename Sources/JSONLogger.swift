@@ -206,7 +206,7 @@ extension JSONLogger {
 	 Merge the logger’s metadata, the provider’s metadata and the given explicit metadata and return the new metadata.
 	 If the provider’s metadata and the explicit metadata are `nil`, returns `nil` to signify the current `jsonMetadataCache` can be used. */
 	private func mergedMetadata(with explicit: Logger.Metadata?) -> Logger.Metadata? {
-		var metadata = metadata
+		var metadata = self.metadata
 		let provided = metadataProvider?.get() ?? [:]
 		
 		guard !provided.isEmpty || !((explicit ?? [:]).isEmpty) else {
@@ -234,7 +234,7 @@ extension JSONLogger {
 			case let .dictionary(dictionary): return .object(dictionary.mapValues(jsonMetadataValue(_:)))
 			case let .stringConvertible(s):
 				if let (encoder, decoder) = jsonCodersForStringConvertibles,
-					let c = s as? any Encodable,
+					let c = s as? Encodable,
 					let data = try? encoder.encode(c),
 					let json = try? decoder.decode(JSON.self, from: data)
 				{
