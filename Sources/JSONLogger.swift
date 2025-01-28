@@ -39,7 +39,7 @@ public struct JSONLogger : LogHandler {
 	
 	public static let defaultJSONEncoder: JSONEncoder = {
 		let res = JSONEncoder()
-#if swift(>=5.2)
+#if swift(>=5.3)
 		res.outputFormatting = [.withoutEscapingSlashes]
 #endif
 		res.keyEncodingStrategy = .useDefaultKeys
@@ -51,7 +51,7 @@ public struct JSONLogger : LogHandler {
 	
 	public static let defaultJSONCodersForStringConvertibles: (JSONEncoder, JSONDecoder) = {
 		let encoder = JSONEncoder()
-#if swift(>=5.2)
+#if swift(>=5.3)
 		encoder.outputFormatting = [.withoutEscapingSlashes]
 #endif
 		encoder.keyEncodingStrategy = .useDefaultKeys
