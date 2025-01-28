@@ -100,7 +100,7 @@ final class JSONLoggerTests : XCTestCase {
 		]), date: Date(), label: "best-logger", source: "dummy-source", file: "dummy-file", function: "dummy-function", line: 42)
 		
 		struct AnError : Error {}
-		let failEncoder = {
+		let failEncoder = { () -> JSONEncoder in
 			let res = JSONEncoder()
 			res.dateEncodingStrategy = .custom({ _, _ in throw AnError() })
 			return res
