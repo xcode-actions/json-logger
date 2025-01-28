@@ -6,11 +6,15 @@ import WASILibc
 
 typealias Pipe = FakePipe
 /* We create a fake pipe on WASI as creating a pipe is not possible. */
-struct FakePipe {
+final class FakePipe {
 	
 	init() {
 		try! Data().write(to: fileURL)
 		assert(FileManager.default.fileExists(atPath: fileURL.absoluteURL.path), "Created file does not exist!")
+	}
+	
+	deinit {
+		_ = try? FileManager.default.removeItem(at: fileURL)
 	}
 	
 	var fileHandleForWriting: FileHandle {
