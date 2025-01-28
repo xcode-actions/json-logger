@@ -49,11 +49,10 @@ public struct JSONLogger : LogHandler {
 		return res
 	}()
 	
+#if swift(>=5.7)
 	public static let defaultJSONCodersForStringConvertibles: (JSONEncoder, JSONDecoder) = {
 		let encoder = JSONEncoder()
-#if swift(>=5.3)
 		encoder.outputFormatting = [.withoutEscapingSlashes]
-#endif
 		encoder.keyEncodingStrategy = .useDefaultKeys
 		encoder.dateEncodingStrategy = .iso8601
 		encoder.dataEncodingStrategy = .base64
@@ -76,6 +75,7 @@ public struct JSONLogger : LogHandler {
 		decoder.nonConformingFloatDecodingStrategy = .throw
 		return (encoder, decoder)
 	}()
+#endif
 	
 	public var logLevel: Logger.Level = .info
 	
@@ -92,11 +92,14 @@ public struct JSONLogger : LogHandler {
 	public let suffix: Data
 	
 	public let jsonEncoder: JSONEncoder
+#if swift(>=5.7)
 	/**
 	 If non-`nil`, the `Encodable` stringConvertible properties in the metadata will be encoded as `JSON` using the `JSONEncoder` and `JSONDecoder`.
 	 If the encoding fails or this property is set to `nil` the String value will be used. */
 	public let jsonCodersForStringConvertibles: (JSONEncoder, JSONDecoder)?
+#endif
 	
+#if swift(>=5.7)
 	public static func forJSONSeq(
 		on fh: FileHandle = .standardOutput,
 		label: String,
@@ -132,6 +135,41 @@ public struct JSONLogger : LogHandler {
 		
 		self.metadataProvider = metadataProvider
 	}
+	
+#else
+	
+	public static func forJSONSeq(
+		on fh: FileHandle = .standardOutput,
+		label: String,
+		jsonEncoder: JSONEncoder = Self.defaultJSONEncoder,
+		metadataProvider: Logger.MetadataProvider? = LoggingSystem.metadataProvider
+	) -> Self {
+		return Self(
+			label: label,
+			fileHandle: fh,
+			lineSeparator: Data(), prefix: Data([0x1e]), suffix: Data([0x0a]),
+			jsonEncoder: jsonEncoder,
+			metadataProvider: metadataProvider
+		)
+	}
+	
+	public init(
+		label: String,
+		fileHandle: FileHandle = .standardOutput,
+		lineSeparator: Data = Data(), prefix: Data = Data(), suffix: Data = Data("\n".utf8),
+		jsonEncoder: JSONEncoder = Self.defaultJSONEncoder,
+		metadataProvider: Logger.MetadataProvider? = LoggingSystem.metadataProvider
+	) {
+		self.label = label
+		self.outputFileHandle = fileHandle
+		self.lineSeparator = lineSeparator
+		self.prefix = prefix
+		self.suffix = suffix
+		self.jsonEncoder = jsonEncoder
+		
+		self.metadataProvider = metadataProvider
+	}
+#endif
 	
 	public subscript(metadataKey metadataKey: String) -> Logger.Metadata.Value? {
 		get {metadata[metadataKey]}
