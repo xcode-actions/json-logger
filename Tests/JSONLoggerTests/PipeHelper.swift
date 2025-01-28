@@ -5,6 +5,7 @@ import WASILibc
 
 
 typealias Pipe = FakePipe
+/* We create a fake pipe on WASI as creating a pipe is not possible. */
 struct FakePipe {
 	
 	init() {
