@@ -81,7 +81,7 @@ final class JSONLoggerTests : XCTestCase {
 		jsonLogger.log(level: ref.level, message: "\(ref.message)", metadata: ["yolo": .stringConvertible(BestStruct(val: 21))], source: ref.source, file: ref.file, function: ref.function, line: ref.line)
 		try pipe.fileHandleForWriting.close()
 		let data = try pipe.fileHandleForReading.readToEnd() ?? Data()
-		print(data.reduce("", { $0 + String(format: "%02x", $1) }))
+		//print(data.reduce("", { $0 + String(format: "%02x", $1) }))
 		var line = try Self.defaultJSONDecoder.decode(LogLine.self, from: data)
 		XCTAssertLessThanOrEqual(line.date.timeIntervalSince(ref.date), 0.1)
 		line.date = ref.date
