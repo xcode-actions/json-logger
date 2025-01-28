@@ -5,7 +5,11 @@ import Logging
 
 
 
-public struct LogLine : Hashable, Codable, Sendable {
+/* Technically Sendable is available starting at Swift 5.5, but swift-log was not ready at the time so we have to use Swift 5.6 instead. */
+#if swift(>=5.6)
+extension LogLine : JSONLogger_Sendable {}
+#endif
+public struct LogLine : Hashable, Codable {
 	
 	public var level: Logger.Level
 	public var message: String

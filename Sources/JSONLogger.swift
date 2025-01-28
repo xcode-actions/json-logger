@@ -39,7 +39,9 @@ public struct JSONLogger : LogHandler {
 	
 	public static let defaultJSONEncoder: JSONEncoder = {
 		let res = JSONEncoder()
+#if swift(>=5.3)
 		res.outputFormatting = [.withoutEscapingSlashes]
+#endif
 		res.keyEncodingStrategy = .useDefaultKeys
 		res.dateEncodingStrategy = .iso8601
 		res.dataEncodingStrategy = .base64
@@ -47,6 +49,7 @@ public struct JSONLogger : LogHandler {
 		return res
 	}()
 	
+#if swift(>=5.7)
 	public static let defaultJSONCodersForStringConvertibles: (JSONEncoder, JSONDecoder) = {
 		let encoder = JSONEncoder()
 		encoder.outputFormatting = [.withoutEscapingSlashes]
@@ -72,6 +75,7 @@ public struct JSONLogger : LogHandler {
 		decoder.nonConformingFloatDecodingStrategy = .throw
 		return (encoder, decoder)
 	}()
+#endif
 	
 	public var logLevel: Logger.Level = .info
 	
@@ -88,11 +92,14 @@ public struct JSONLogger : LogHandler {
 	public let suffix: Data
 	
 	public let jsonEncoder: JSONEncoder
+#if swift(>=5.7)
 	/**
 	 If non-`nil`, the `Encodable` stringConvertible properties in the metadata will be encoded as `JSON` using the `JSONEncoder` and `JSONDecoder`.
 	 If the encoding fails or this property is set to `nil` the String value will be used. */
 	public let jsonCodersForStringConvertibles: (JSONEncoder, JSONDecoder)?
+#endif
 	
+#if swift(>=5.7)
 	public static func forJSONSeq(
 		on fh: FileHandle = .standardOutput,
 		label: String,
@@ -128,6 +135,41 @@ public struct JSONLogger : LogHandler {
 		
 		self.metadataProvider = metadataProvider
 	}
+	
+#else
+	
+	public static func forJSONSeq(
+		on fh: FileHandle = .standardOutput,
+		label: String,
+		jsonEncoder: JSONEncoder = Self.defaultJSONEncoder,
+		metadataProvider: Logger.MetadataProvider? = LoggingSystem.metadataProvider
+	) -> Self {
+		return Self(
+			label: label,
+			fileHandle: fh,
+			lineSeparator: Data(), prefix: Data([0x1e]), suffix: Data([0x0a]),
+			jsonEncoder: jsonEncoder,
+			metadataProvider: metadataProvider
+		)
+	}
+	
+	public init(
+		label: String,
+		fileHandle: FileHandle = .standardOutput,
+		lineSeparator: Data = Data(), prefix: Data = Data(), suffix: Data = Data("\n".utf8),
+		jsonEncoder: JSONEncoder = Self.defaultJSONEncoder,
+		metadataProvider: Logger.MetadataProvider? = LoggingSystem.metadataProvider
+	) {
+		self.label = label
+		self.outputFileHandle = fileHandle
+		self.lineSeparator = lineSeparator
+		self.prefix = prefix
+		self.suffix = suffix
+		self.jsonEncoder = jsonEncoder
+		
+		self.metadataProvider = metadataProvider
+	}
+#endif
 	
 	public subscript(metadataKey metadataKey: String) -> Logger.Metadata.Value? {
 		get {metadata[metadataKey]}
@@ -206,7 +248,7 @@ extension JSONLogger {
 	 Merge the logger’s metadata, the provider’s metadata and the given explicit metadata and return the new metadata.
 	 If the provider’s metadata and the explicit metadata are `nil`, returns `nil` to signify the current `jsonMetadataCache` can be used. */
 	private func mergedMetadata(with explicit: Logger.Metadata?) -> Logger.Metadata? {
-		var metadata = metadata
+		var metadata = self.metadata
 		let provided = metadataProvider?.get() ?? [:]
 		
 		guard !provided.isEmpty || !((explicit ?? [:]).isEmpty) else {
@@ -233,6 +275,8 @@ extension JSONLogger {
 			case let .array(array):           return .array (array     .map      (jsonMetadataValue(_:)))
 			case let .dictionary(dictionary): return .object(dictionary.mapValues(jsonMetadataValue(_:)))
 			case let .stringConvertible(s):
+				/* Swift 5.7 and more. */
+#if swift(>=5.7)
 				if let (encoder, decoder) = jsonCodersForStringConvertibles,
 					let c = s as? any Encodable,
 					let data = try? encoder.encode(c),
@@ -242,6 +286,9 @@ extension JSONLogger {
 				} else {
 					return .string(s.description)
 				}
+#else
+				return .string(s.description)
+#endif
 		}
 		
 	}
