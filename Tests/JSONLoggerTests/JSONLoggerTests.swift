@@ -69,6 +69,7 @@ final class JSONLoggerTests : XCTestCase {
 		XCTAssertEqual(data.first, 0x0a)
 	}
 	
+#if swift(>=5.7)
 	func testEncodeMetadataAsJSON() throws {
 		struct BestStruct : Encodable, CustomStringConvertible {
 			var val: Int
@@ -87,6 +88,7 @@ final class JSONLoggerTests : XCTestCase {
 		line.date = ref.date
 		XCTAssertEqual(line, ref)
 	}
+#endif
 	
 	func testFallbackOnLogLineEncodeFailure() throws {
 		struct BestStruct : Encodable, CustomStringConvertible {

@@ -5,16 +5,23 @@ import XCTest
 
 
 
+let testWhenAvailable1: [(String, (XCTestCase) -> () -> Void)]
+#if swift(>=5.7)
+testWhenAvailable1 = [
+	("testEncodeMetadataAsJSON", JSONLoggerTests.testEncodeMetadataAsJSON),
+]
+#else
+testWhenAvailable1 = []
+#endif
 var tests: [XCTestCaseEntry] = [
 	testCase([
 		("test0NoSeparatorForFirstLog", JSONLoggerTests.test0NoSeparatorForFirstLog),
 		("testFromDoc", JSONLoggerTests.testFromDoc),
 		("testSeparatorForNotFirstLog", JSONLoggerTests.testSeparatorForNotFirstLog),
-		("testEncodeMetadataAsJSON", JSONLoggerTests.testEncodeMetadataAsJSON),
 		("testFallbackOnLogLineEncodeFailure", JSONLoggerTests.testFallbackOnLogLineEncodeFailure),
 		("testDecodeLogLineWithBothValidDateAndMangledDate", JSONLoggerTests.testDecodeLogLineWithBothValidDateAndMangledDate),
 		("testDecodeLogLineWithBothInvalidDateAndMangledDate", JSONLoggerTests.testDecodeLogLineWithBothInvalidDateAndMangledDate),
-	]),
+	] + testWhenAvailable1),
 ]
 #if !os(WASI)
 XCTMain(tests)
