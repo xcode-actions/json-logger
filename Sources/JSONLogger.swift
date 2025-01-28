@@ -238,7 +238,7 @@ extension JSONLogger {
 			case let .dictionary(dictionary): return .object(dictionary.mapValues(jsonMetadataValue(_:)))
 			case let .stringConvertible(s):
 				if let (encoder, decoder) = jsonCodersForStringConvertibles,
-					let c = s as? Encodable,
+					let c = s as? any Encodable,
 					let data = try? encoder.encode(c),
 					let json = try? decoder.decode(JSON.self, from: data)
 				{
