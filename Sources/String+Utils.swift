@@ -5,7 +5,7 @@ import Foundation
 internal extension String {
 	
 	func safifyForJSON() -> String {
-		let ascii = unicodeScalars.lazy.map{ scalar in
+		let ascii = unicodeScalars.lazy.map{ scalar -> String in
 			/* Note: The #""# syntax is available starting at Swift 5.4. */
 			switch scalar {
 				case _ where !scalar.isASCII: return "-"
