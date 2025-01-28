@@ -237,6 +237,8 @@ extension JSONLogger {
 			case let .array(array):           return .array (array     .map      (jsonMetadataValue(_:)))
 			case let .dictionary(dictionary): return .object(dictionary.mapValues(jsonMetadataValue(_:)))
 			case let .stringConvertible(s):
+				/* Swift 5.7 and more. */
+#if swift(>=5.7)
 				if let (encoder, decoder) = jsonCodersForStringConvertibles,
 					let c = s as? any Encodable,
 					let data = try? encoder.encode(c),
@@ -246,6 +248,9 @@ extension JSONLogger {
 				} else {
 					return .string(s.description)
 				}
+#else
+				return .string(s.description)
+#endif
 		}
 		
 	}
