@@ -18,7 +18,7 @@ let package = Package(
 	],
 	dependencies: [
 		.package(url: "https://github.com/apple/swift-log.git",      from: "1.5.1"),
-		.package(url: "https://github.com/Frizlab/generic-json.git", from: "3.1.2"),
+		.package(url: "https://github.com/Frizlab/generic-json.git", from: "3.1.3"),
 	],
 	targets: [
 		.target(name: "JSONLogger", dependencies: [
