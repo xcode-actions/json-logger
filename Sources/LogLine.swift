@@ -5,7 +5,7 @@ import Logging
 
 
 
-public struct LogLine : Hashable, Codable, Sendable {
+public struct LogLine : Hashable, Codable, JSONLogger_Sendable {
 	
 	public var level: Logger.Level
 	public var message: String
