@@ -1,6 +1,5 @@
 #if os(WASI)
 import Foundation
-import WASILibc
 
 
 
