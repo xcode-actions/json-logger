@@ -15,7 +15,7 @@ let package = Package(
 		.target(name: "JSONLogger", dependencies: [
 			.product(name: "GenericJSON",   package: "generic-json"),
 			.product(name: "Logging",       package: "swift-log"),
-		], path: "Sources"),
+		], path: "Sources", exclude: ["JSONLogger+WithSendable.swift"]),
 		.testTarget(name: "JSONLoggerTests", dependencies: ["JSONLogger"]),
 	]
 )
