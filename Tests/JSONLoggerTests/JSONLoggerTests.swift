@@ -29,7 +29,7 @@ final class JSONLoggerTests : XCTestCase {
 	}()
 	
 	override class func setUp() {
-		LoggingSystem.bootstrap{ JSONLogger(label: $0) }
+		LoggingSystem.bootstrap(JSONLogger.init, metadataProvider: nil)
 	}
 	
 	/* From <https://apple.github.io/swift-log/docs/current/Logging/Protocols/LogHandler.html#treat-log-level-amp-metadata-as-values>. */

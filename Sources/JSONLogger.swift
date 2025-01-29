@@ -6,7 +6,7 @@ import Logging
 
 
 /**
- A logger that logs it’s messages to stdout in the JSON format, one log per line.
+ A logger that logs its messages to stdout in the JSON format, one log per line.
  
  The end of line separator is actually customizable, and can be any sequence of bytes.
  By default it’s “`\n`”.
