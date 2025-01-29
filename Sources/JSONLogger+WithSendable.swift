@@ -16,4 +16,9 @@ extension JSONLogger {
 		self.init(label: label, fileHandle: .standardOutput, metadataProvider: metadataProvider)
 	}
 	
+	@Sendable
+	public static func initForJSONSeq(label: String, metadataProvider: Logger.MetadataProvider? = LoggingSystem.metadataProvider) -> JSONLogger {
+		Self.forJSONSeq(label: label, metadataProvider: metadataProvider)
+	}
+	
 }
