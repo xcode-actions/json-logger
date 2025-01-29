@@ -8,24 +8,28 @@ typealias Pipe = FakePipe
 final class FakePipe {
 	
 	init() {
-		try! Data().write(to: fileURL)
-		assert(FileManager.default.fileExists(atPath: fileURL.absoluteURL.path), "Created file does not exist!")
+		/* For some reasons, creating the file with `FakePipe.fm.createFile(atPath: filepath, contents: nil)` fails.
+		 * Instead we use the Data.write(to:) method which works. */
+		guard (try? Data().write(to: fileURL)) != nil else {
+			fatalError("\u{1B}[91;1mCould not create temporary file.\u{1B}[0m\n\u{1B}[31;1mPlease make sure to run the test with the `--dir \"\(fileURL.deletingLastPathComponent().path)\"` option.\u{1B}[0m")
+		}
 	}
 	
 	deinit {
-		_ = try? FileManager.default.removeItem(at: fileURL)
+		_ = try? FakePipe.fm.removeItem(at: fileURL)
 	}
 	
 	var fileHandleForWriting: FileHandle {
-		return try! FileHandle(forWritingTo: fileURL)
+		try! FileHandle(forWritingTo: fileURL)
 	}
 	
 	var fileHandleForReading: FileHandle {
-		return try! FileHandle(forReadingFrom: fileURL)
+		try! FileHandle(forReadingFrom: fileURL)
 	}
 	
-	private let fileURL = FileManager.default.temporaryDirectory.appendingPathComponent("json-logger-test-\(UUID()).txt")
-//	private let fileURL = URL(fileURLWithPath: #filePath).deletingLastPathComponent().appendingPathComponent("json-logger-test-\(UUID()).txt")
+	private static let fm = FileManager.default
+	
+	private let fileURL = FakePipe.fm.temporaryDirectory.appendingPathComponent("json-logger-test-\(UUID()).txt")
 	private var filepath: String {
 		fileURL.absoluteURL.path
 	}
