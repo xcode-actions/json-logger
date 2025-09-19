@@ -39,8 +39,10 @@ public struct JSONLogger : LogHandler {
 	
 	public static let defaultJSONEncoder: JSONEncoder = {
 		let res = JSONEncoder()
-#if swift(>=5.3)
-		res.outputFormatting = [.withoutEscapingSlashes]
+#if canImport(Darwin) || swift(>=5.3)
+		if #available(macOS 10.15, tvOS 13.0, iOS 13.0, watchOS 6.0, *) {
+			res.outputFormatting = [.withoutEscapingSlashes]
+		}
 #endif
 		res.keyEncodingStrategy = .useDefaultKeys
 		res.dateEncodingStrategy = .iso8601
@@ -52,14 +54,16 @@ public struct JSONLogger : LogHandler {
 #if swift(>=5.7)
 	public static let defaultJSONCodersForStringConvertibles: (JSONEncoder, JSONDecoder) = {
 		let encoder = JSONEncoder()
-		encoder.outputFormatting = [.withoutEscapingSlashes]
+		if #available(macOS 10.15, tvOS 13.0, iOS 13.0, watchOS 6.0, *) {
+			encoder.outputFormatting = [.withoutEscapingSlashes]
+		}
 		encoder.keyEncodingStrategy = .useDefaultKeys
 		encoder.dateEncodingStrategy = .iso8601
 		encoder.dataEncodingStrategy = .base64
 		encoder.nonConformingFloatEncodingStrategy = .throw
 		let decoder = JSONDecoder()
 		/* #if os(Darwin) is not available on this version of the compiler. */
-#if canImport(Darwin)
+#if canImport(Darwin) || swift(>=6.0)
 		if #available(macOS 12.0, tvOS 15.0, iOS 15.0, watchOS 8.0, *) {
 			decoder.allowsJSON5 = false
 		}
@@ -67,7 +71,7 @@ public struct JSONLogger : LogHandler {
 		decoder.keyDecodingStrategy = .useDefaultKeys
 		decoder.dateDecodingStrategy = .iso8601
 		decoder.dataDecodingStrategy = .base64
-#if canImport(Darwin)
+#if canImport(Darwin) || swift(>=6.0)
 		if #available(macOS 12.0, tvOS 15.0, iOS 15.0, watchOS 8.0, *) {
 			decoder.assumesTopLevelDictionary = false
 		}
