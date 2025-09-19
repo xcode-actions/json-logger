@@ -59,7 +59,7 @@ public struct JSONLogger : LogHandler {
 		encoder.nonConformingFloatEncodingStrategy = .throw
 		let decoder = JSONDecoder()
 		/* #if os(Darwin) is not available on this version of the compiler. */
-#if !os(Linux)
+#if canImport(Darwin)
 		if #available(macOS 12.0, tvOS 15.0, iOS 15.0, watchOS 8.0, *) {
 			decoder.allowsJSON5 = false
 		}
@@ -67,7 +67,7 @@ public struct JSONLogger : LogHandler {
 		decoder.keyDecodingStrategy = .useDefaultKeys
 		decoder.dateDecodingStrategy = .iso8601
 		decoder.dataDecodingStrategy = .base64
-#if !os(Linux)
+#if canImport(Darwin)
 		if #available(macOS 12.0, tvOS 15.0, iOS 15.0, watchOS 8.0, *) {
 			decoder.assumesTopLevelDictionary = false
 		}
