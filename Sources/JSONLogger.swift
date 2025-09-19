@@ -222,7 +222,48 @@ public struct JSONLogger : LogHandler {
 			/* Is the write retried on interrupt?
 			 * We’ll assume yes, but we don’t and can’t know for sure
 			 *  until FileHandle has been migrated to the open-source Foundation. */
-			_ = try? outputFileHandle.write(contentsOf: interLogData + lineDataNoSeparator)
+			let data = interLogData + lineDataNoSeparator
+			/* Is there a better idea than silently drop the message in case of fail? */
+			/* Is the write retried on interrupt?
+			 * We’ll assume yes, but we don’t and can’t know for sure
+			 *  until FileHandle has been migrated to the open-source Foundation. */
+			if #available(macOS 10.15.4, tvOS 13.4, iOS 13.4, watchOS 6.2, *) {
+#if swift(>=5.2) || !canImport(Darwin)
+				_ = try? outputFileHandle.write(contentsOf: data)
+#else
+				/* Let’s write “manullay” (FileHandle’s write(_:) method throws an ObjC exception in case of an error).
+				 * This code is copied below. */
+				data.withUnsafeBytes{ bytes in
+					guard !bytes.isEmpty else {
+						return
+					}
+					var written: Int = 0
+					repeat {
+						written += write(
+							outputFileHandle.fileDescriptor,
+							bytes.baseAddress!.advanced(by: written),
+							bytes.count - written
+						)
+					} while written < bytes.count && (errno == EINTR || errno == EAGAIN)
+				}
+#endif
+			} else {
+				/* Let’s write “manullay” (FileHandle’s write(_:) method throws an ObjC exception in case of an error).
+				 * This is a copy of the code just above. */
+				data.withUnsafeBytes{ bytes in
+					guard !bytes.isEmpty else {
+						return
+					}
+					var written: Int = 0
+					repeat {
+						written += write(
+							outputFileHandle.fileDescriptor,
+							bytes.baseAddress!.advanced(by: written),
+							bytes.count - written
+						)
+					} while written < bytes.count && (errno == EINTR || errno == EAGAIN)
+				}
+			}
 		}
 	}
 	
