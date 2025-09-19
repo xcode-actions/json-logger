@@ -45,7 +45,18 @@ public struct JSONLogger : LogHandler {
 		}
 #endif
 		res.keyEncodingStrategy = .useDefaultKeys
-		res.dateEncodingStrategy = .iso8601
+		if #available(macOS 10.12, tvOS 10.0, iOS 10.0, watchOS 3.0, *) {
+			res.dateEncodingStrategy = .iso8601
+		} else {
+			res.dateEncodingStrategy = .formatted({
+				/* Technically an RFC3339 date formatter (straight from the doc), but compatible with ISO8601. */
+				let ret = DateFormatter()
+				ret.locale = Locale(identifier: "en_US_POSIX")
+				ret.dateFormat = "yyyy-MM-dd'T'HH:mm:ssZZZZZ"
+				ret.timeZone = TimeZone(secondsFromGMT: 0)
+				return ret
+			}())
+		}
 		res.dataEncodingStrategy = .base64
 		res.nonConformingFloatEncodingStrategy = .convertToString(positiveInfinity: "+inf", negativeInfinity: "-inf", nan: "nan")
 		return res
