@@ -17,7 +17,18 @@ final class JSONLoggerTests : XCTestCase {
 #endif
 		}
 		res.keyDecodingStrategy = .useDefaultKeys
-		res.dateDecodingStrategy = .iso8601
+		if #available(macOS 10.12, tvOS 10.0, iOS 10.0, watchOS 3.0, *) {
+			res.dateDecodingStrategy = .iso8601
+		} else {
+			res.dateDecodingStrategy = .formatted({
+				/* The same formatter we give in the encoding part (in `defaultJSONEncoder`). */
+				let ret = DateFormatter()
+				ret.locale = Locale(identifier: "en_US_POSIX")
+				ret.dateFormat = "yyyy-MM-dd'T'HH:mm:ssZZZZZ"
+				ret.timeZone = TimeZone(secondsFromGMT: 0)
+				return ret
+			}())
+		}
 		res.dataDecodingStrategy = .base64
 		if #available(macOS 12.0, tvOS 15.0, iOS 15.0, watchOS 8.0, *) {
 #if canImport(Darwin) || compiler(>=6)
