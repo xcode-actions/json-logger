@@ -225,7 +225,7 @@ public struct JSONLogger : LogHandler {
 		}
 		let lineDataNoSeparator = prefix + jsonLine + suffix
 		
-		/* We lock, because the writeAll function might split the write in more than 1 write
+		/* We lock, because the write(contentsOf:) function might split the write in more than 1 write
 		 *  (if the write system call only writes a part of the data).
 		 * If another part of the program writes to fd, we might get interleaved data,
 		 *  because they cannot be aware of our lock (and we cannot be aware of theirs if they have one). */
