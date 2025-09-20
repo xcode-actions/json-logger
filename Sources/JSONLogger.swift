@@ -246,7 +246,7 @@ public struct JSONLogger : LogHandler {
 #if swift(>=5.2) || !canImport(Darwin)
 				_ = try? outputFileHandle.write(contentsOf: data)
 #else
-				/* Let’s write “manullay” (FileHandle’s write(_:) method throws an ObjC exception in case of an error).
+				/* Let’s write “manually” (FileHandle’s write(_:) method throws an ObjC exception in case of an error).
 				 * This code is copied below. */
 				data.withUnsafeBytes{ bytes in
 					guard !bytes.isEmpty else {
@@ -263,7 +263,7 @@ public struct JSONLogger : LogHandler {
 				}
 #endif
 			} else {
-				/* Let’s write “manullay” (FileHandle’s write(_:) method throws an ObjC exception in case of an error).
+				/* Let’s write “manually” (FileHandle’s write(_:) method throws an ObjC exception in case of an error).
 				 * This is a copy of the code just above. */
 				data.withUnsafeBytes{ bytes in
 					guard !bytes.isEmpty else {
