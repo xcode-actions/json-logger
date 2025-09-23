@@ -35,12 +35,17 @@ extension FileHandle {
 			let buffer = UnsafeMutableRawBufferPointer.allocate(byteCount: 512, alignment: MemoryLayout<UInt8>.alignment)
 			defer {buffer.deallocate()}
 			
+#if !os(Windows)
 			var nread = 0
+			let bufferCount = buffer.count
+#else
+			var nread = Int32(0)
+			let bufferCount = UInt32(buffer.count)
+#endif
 			var ret = Data()
-			repeat {
-				nread = system_read(fileDescriptor, buffer.baseAddress, buffer.count)
-				ret += buffer[0..<nread]
-			} while nread > 0
+			while ({ nread = system_read(fileDescriptor, buffer.baseAddress, bufferCount); return nread }()) > 0 {
+				ret += buffer[0..<Int(nread)]
+			}
 			guard nread >= 0 else {
 				throw Errno()
 			}
@@ -50,12 +55,17 @@ extension FileHandle {
 			let buffer = UnsafeMutableRawBufferPointer.allocate(byteCount: 512, alignment: MemoryLayout<UInt8>.alignment)
 			defer {buffer.deallocate()}
 			
+#if !os(Windows)
 			var nread = 0
+			let bufferCount = buffer.count
+#else
+			var nread = Int32(0)
+			let bufferCount = UInt32(buffer.count)
+#endif
 			var ret = Data()
-			repeat {
-				nread = system_read(fileDescriptor, buffer.baseAddress, buffer.count)
-				ret += buffer[0..<nread]
-			} while nread > 0
+			while ({ nread = system_read(fileDescriptor, buffer.baseAddress, bufferCount); return nread }()) > 0 {
+				ret += buffer[0..<Int(nread)]
+			}
 			guard nread >= 0 else {
 				throw Errno()
 			}
