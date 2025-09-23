@@ -43,7 +43,11 @@ extension FileHandle {
 
 
 struct Errno : Error {
+#if canImport(Darwin)
 	var err: errno_t
+#else
+	var err: Int32
+#endif
 	init() {
 		self.err = errno
 	}
