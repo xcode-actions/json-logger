@@ -12,7 +12,7 @@ final class JSONLoggerTests : XCTestCase {
 	public static let defaultJSONDecoder: JSONDecoder = {
 		let res = JSONDecoder()
 		if #available(macOS 12.0, tvOS 15.0, iOS 15.0, watchOS 8.0, *) {
-#if canImport(Darwin) || compiler(>=6)
+#if (canImport(Darwin) && swift(>=5.5)) || swift(>=6)
 			res.allowsJSON5 = false
 #endif
 		}
@@ -31,7 +31,7 @@ final class JSONLoggerTests : XCTestCase {
 		}
 		res.dataDecodingStrategy = .base64
 		if #available(macOS 12.0, tvOS 15.0, iOS 15.0, watchOS 8.0, *) {
-#if canImport(Darwin) || compiler(>=6)
+#if (canImport(Darwin) && swift(>=5.5)) || swift(>=6)
 			res.assumesTopLevelDictionary = false
 #endif
 		}

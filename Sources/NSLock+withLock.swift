@@ -1,4 +1,4 @@
-#if (!canImport(Darwin) && swift(<6.0)) || swift(<5.7)
+#if swift(<5.7) || (!canImport(Darwin) && swift(<6.0))
 import Foundation
 
 
