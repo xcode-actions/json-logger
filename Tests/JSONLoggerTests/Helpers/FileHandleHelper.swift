@@ -26,7 +26,23 @@ extension FileHandle {
 	
 	func jl_readToEnd() throws -> Data? {
 		if #available(macOS 10.15, tvOS 13.0, iOS 13.0, watchOS 6.0, *) {
+#if swift(>=5.2) || !canImport(Darwin)
 			return try readToEnd()
+#else
+			let buffer = UnsafeMutableRawBufferPointer.allocate(byteCount: 512, alignment: MemoryLayout<UInt8>.alignment)
+			defer {buffer.deallocate()}
+			
+			var nread = 0
+			var ret = Data()
+			repeat {
+				nread = system_read(fileDescriptor, buffer.baseAddress, buffer.count)
+				ret += buffer
+			} while nread > 0
+			guard nread >= 0 else {
+				throw Errno()
+			}
+			return ret
+#endif
 		} else {
 			let buffer = UnsafeMutableRawBufferPointer.allocate(byteCount: 512, alignment: MemoryLayout<UInt8>.alignment)
 			defer {buffer.deallocate()}
