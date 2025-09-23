@@ -32,7 +32,7 @@ extension FileHandle {
 	}
 	
 	func jl_readToEnd() throws -> Data? {
-		if #available(macOS 10.15, tvOS 13.0, iOS 13.0, watchOS 6.0, *) {
+		if #available(macOS 10.15.4, iOS 13.4, watchOS 6.2, tvOS 13.4, *) {
 #if swift(>=5.2) || !canImport(Darwin)
 			return try readToEnd()
 #elseif !os(Windows)
