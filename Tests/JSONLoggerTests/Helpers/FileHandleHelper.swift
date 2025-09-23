@@ -2,8 +2,13 @@ import Foundation
 
 
 
+#if swift(>=5.10)
+private nonisolated(unsafe) let system_read = read
+private nonisolated(unsafe) let system_close = close
+#else
 private let system_read = read
 private let system_close = close
+#endif
 
 extension FileHandle {
 	
