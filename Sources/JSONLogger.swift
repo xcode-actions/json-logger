@@ -236,19 +236,17 @@ public struct JSONLogger : LogHandler {
 			let interLogData: Data
 			if Self.isFirstLog {interLogData = Data(); Self.isFirstLog = false}
 			else               {interLogData = lineSeparator}
-			/* Is there a better idea than silently drop the message in case of fail? */
-			/* Is the write retried on interrupt?
-			 * We’ll assume yes, but we don’t and can’t know for sure
-			 *  until FileHandle has been migrated to the open-source Foundation. */
 			let data = interLogData + lineDataNoSeparator
+			let fh = outputFileHandle
+			
 			/* Is there a better idea than silently drop the message in case of fail? */
 			/* Is the write retried on interrupt?
 			 * We’ll assume yes, but we don’t and can’t know for sure
 			 *  until FileHandle has been migrated to the open-source Foundation. */
 			if #available(macOS 10.15.4, tvOS 13.4, iOS 13.4, watchOS 6.2, *) {
 #if swift(>=5.2) || !canImport(Darwin)
-				_ = try? outputFileHandle.write(contentsOf: data)
-#else
+				_ = try? fh.write(contentsOf: data)
+#elseif !os(Windows)
 				/* Let’s write “manually” (FileHandle’s write(_:) method throws an ObjC exception in case of an error).
 				 * This code is copied below. */
 				data.withUnsafeBytes{ bytes in
@@ -257,15 +255,20 @@ public struct JSONLogger : LogHandler {
 					}
 					var written: Int = 0
 					repeat {
+						/* Note: Windows version takes an UInt32 for the number of bytes to write and returns an Int32.
+						 *       It does not matter, fh.fileDescriptor is not accessible on Windows anyways… */
 						written += write(
-							outputFileHandle.fileDescriptor,
+							fh.fileDescriptor,
 							bytes.baseAddress!.advanced(by: written),
 							bytes.count - written
 						)
 					} while written < bytes.count && (errno == EINTR || errno == EAGAIN)
 				}
+#else
+ #error("How can we get here? We can import Darwin, but we are on Windows??")
 #endif
 			} else {
+#if !os(Windows)
 				/* Let’s write “manually” (FileHandle’s write(_:) method throws an ObjC exception in case of an error).
 				 * This is a copy of the code just above. */
 				data.withUnsafeBytes{ bytes in
@@ -274,13 +277,18 @@ public struct JSONLogger : LogHandler {
 					}
 					var written: Int = 0
 					repeat {
+						/* Note: Windows version takes an UInt32 for the number of bytes to write and returns an Int32.
+						 *       It does not matter, fh.fileDescriptor is not accessible on Windows anyways… */
 						written += write(
-							outputFileHandle.fileDescriptor,
+							fh.fileDescriptor,
 							bytes.baseAddress!.advanced(by: written),
 							bytes.count - written
 						)
 					} while written < bytes.count && (errno == EINTR || errno == EAGAIN)
 				}
+#else
+				fatalError("Unreachable code reached: In else of #available with only Apple platforms checks, but also on Windows.")
+#endif
 			}
 		}
 	}
