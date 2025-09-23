@@ -1,4 +1,4 @@
-#if os(Linux) && swift(<6.0)
+#if swift(<5.7) || (!canImport(Darwin) && swift(<6.0))
 import Foundation
 
 

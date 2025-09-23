@@ -39,11 +39,24 @@ public struct JSONLogger : LogHandler {
 	
 	public static let defaultJSONEncoder: JSONEncoder = {
 		let res = JSONEncoder()
-#if swift(>=5.3)
-		res.outputFormatting = [.withoutEscapingSlashes]
+#if canImport(Darwin) || swift(>=5.3)
+		if #available(macOS 10.15, tvOS 13.0, iOS 13.0, watchOS 6.0, *) {
+			res.outputFormatting = [.withoutEscapingSlashes]
+		}
 #endif
 		res.keyEncodingStrategy = .useDefaultKeys
-		res.dateEncodingStrategy = .iso8601
+		if #available(macOS 10.12, tvOS 10.0, iOS 10.0, watchOS 3.0, *) {
+			res.dateEncodingStrategy = .iso8601
+		} else {
+			res.dateEncodingStrategy = .formatted({
+				/* Technically an RFC3339 date formatter (straight from the doc), but compatible with ISO8601. */
+				let ret = DateFormatter()
+				ret.locale = Locale(identifier: "en_US_POSIX")
+				ret.dateFormat = "yyyy-MM-dd'T'HH:mm:ssZZZZZ"
+				ret.timeZone = TimeZone(secondsFromGMT: 0)
+				return ret
+			}())
+		}
 		res.dataEncodingStrategy = .base64
 		res.nonConformingFloatEncodingStrategy = .convertToString(positiveInfinity: "+inf", negativeInfinity: "-inf", nan: "nan")
 		return res
@@ -52,14 +65,16 @@ public struct JSONLogger : LogHandler {
 #if swift(>=5.7)
 	public static let defaultJSONCodersForStringConvertibles: (JSONEncoder, JSONDecoder) = {
 		let encoder = JSONEncoder()
-		encoder.outputFormatting = [.withoutEscapingSlashes]
+		if #available(macOS 10.15, tvOS 13.0, iOS 13.0, watchOS 6.0, *) {
+			encoder.outputFormatting = [.withoutEscapingSlashes]
+		}
 		encoder.keyEncodingStrategy = .useDefaultKeys
 		encoder.dateEncodingStrategy = .iso8601
 		encoder.dataEncodingStrategy = .base64
 		encoder.nonConformingFloatEncodingStrategy = .throw
 		let decoder = JSONDecoder()
 		/* #if os(Darwin) is not available on this version of the compiler. */
-#if !os(Linux)
+#if canImport(Darwin) || swift(>=6.0)
 		if #available(macOS 12.0, tvOS 15.0, iOS 15.0, watchOS 8.0, *) {
 			decoder.allowsJSON5 = false
 		}
@@ -67,7 +82,7 @@ public struct JSONLogger : LogHandler {
 		decoder.keyDecodingStrategy = .useDefaultKeys
 		decoder.dateDecodingStrategy = .iso8601
 		decoder.dataDecodingStrategy = .base64
-#if !os(Linux)
+#if canImport(Darwin) || swift(>=6.0)
 		if #available(macOS 12.0, tvOS 15.0, iOS 15.0, watchOS 8.0, *) {
 			decoder.assumesTopLevelDictionary = false
 		}
@@ -210,7 +225,7 @@ public struct JSONLogger : LogHandler {
 		}
 		let lineDataNoSeparator = prefix + jsonLine + suffix
 		
-		/* We lock, because the writeAll function might split the write in more than 1 write
+		/* We lock, because the write(contentsOf:) function might split the write in more than 1 write
 		 *  (if the write system call only writes a part of the data).
 		 * If another part of the program writes to fd, we might get interleaved data,
 		 *  because they cannot be aware of our lock (and we cannot be aware of theirs if they have one). */
@@ -222,7 +237,48 @@ public struct JSONLogger : LogHandler {
 			/* Is the write retried on interrupt?
 			 * We’ll assume yes, but we don’t and can’t know for sure
 			 *  until FileHandle has been migrated to the open-source Foundation. */
-			_ = try? outputFileHandle.write(contentsOf: interLogData + lineDataNoSeparator)
+			let data = interLogData + lineDataNoSeparator
+			/* Is there a better idea than silently drop the message in case of fail? */
+			/* Is the write retried on interrupt?
+			 * We’ll assume yes, but we don’t and can’t know for sure
+			 *  until FileHandle has been migrated to the open-source Foundation. */
+			if #available(macOS 10.15.4, tvOS 13.4, iOS 13.4, watchOS 6.2, *) {
+#if swift(>=5.2) || !canImport(Darwin)
+				_ = try? outputFileHandle.write(contentsOf: data)
+#else
+				/* Let’s write “manually” (FileHandle’s write(_:) method throws an ObjC exception in case of an error).
+				 * This code is copied below. */
+				data.withUnsafeBytes{ bytes in
+					guard !bytes.isEmpty else {
+						return
+					}
+					var written: Int = 0
+					repeat {
+						written += write(
+							outputFileHandle.fileDescriptor,
+							bytes.baseAddress!.advanced(by: written),
+							bytes.count - written
+						)
+					} while written < bytes.count && (errno == EINTR || errno == EAGAIN)
+				}
+#endif
+			} else {
+				/* Let’s write “manually” (FileHandle’s write(_:) method throws an ObjC exception in case of an error).
+				 * This is a copy of the code just above. */
+				data.withUnsafeBytes{ bytes in
+					guard !bytes.isEmpty else {
+						return
+					}
+					var written: Int = 0
+					repeat {
+						written += write(
+							outputFileHandle.fileDescriptor,
+							bytes.baseAddress!.advanced(by: written),
+							bytes.count - written
+						)
+					} while written < bytes.count && (errno == EINTR || errno == EAGAIN)
+				}
+			}
 		}
 	}
 	

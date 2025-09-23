@@ -12,15 +12,26 @@ final class JSONLoggerTests : XCTestCase {
 	public static let defaultJSONDecoder: JSONDecoder = {
 		let res = JSONDecoder()
 		if #available(macOS 12.0, tvOS 15.0, iOS 15.0, watchOS 8.0, *) {
-#if canImport(Darwin) || compiler(>=6)
+#if (canImport(Darwin) && swift(>=5.5)) || swift(>=6)
 			res.allowsJSON5 = false
 #endif
 		}
 		res.keyDecodingStrategy = .useDefaultKeys
-		res.dateDecodingStrategy = .iso8601
+		if #available(macOS 10.12, tvOS 10.0, iOS 10.0, watchOS 3.0, *) {
+			res.dateDecodingStrategy = .iso8601
+		} else {
+			res.dateDecodingStrategy = .formatted({
+				/* The same formatter we give in the encoding part (in `defaultJSONEncoder`). */
+				let ret = DateFormatter()
+				ret.locale = Locale(identifier: "en_US_POSIX")
+				ret.dateFormat = "yyyy-MM-dd'T'HH:mm:ssZZZZZ"
+				ret.timeZone = TimeZone(secondsFromGMT: 0)
+				return ret
+			}())
+		}
 		res.dataDecodingStrategy = .base64
 		if #available(macOS 12.0, tvOS 15.0, iOS 15.0, watchOS 8.0, *) {
-#if canImport(Darwin) || compiler(>=6)
+#if (canImport(Darwin) && swift(>=5.5)) || swift(>=6)
 			res.assumesTopLevelDictionary = false
 #endif
 		}
@@ -55,8 +66,8 @@ final class JSONLoggerTests : XCTestCase {
 		let pipe = Pipe()
 		let jsonLogger = JSONLogger(label: "best-logger", fileHandle: pipe.fileHandleForWriting, lineSeparator: Data([0x0a]), prefix: Data(), suffix: Data())
 		jsonLogger.log(level: .info, message: "First log message", metadata: nil, source: "dummy-source", file: "dummy-file", function: "dummy-function", line: 42)
-		try pipe.fileHandleForWriting.close()
-		let data = try pipe.fileHandleForReading.readToEnd() ?? Data()
+		try pipe.fileHandleForWriting.jl_close()
+		let data = try pipe.fileHandleForReading.jl_readToEnd() ?? Data()
 		XCTAssertEqual(data.first, 0x7b)
 	}
 	
@@ -64,8 +75,8 @@ final class JSONLoggerTests : XCTestCase {
 		let pipe = Pipe()
 		let jsonLogger = JSONLogger(label: "best-logger", fileHandle: pipe.fileHandleForWriting, lineSeparator: Data([0x0a]), prefix: Data(), suffix: Data())
 		jsonLogger.log(level: .info, message: "Not first log message", metadata: nil, source: "dummy-source", file: "dummy-file", function: "dummy-function", line: 42)
-		try pipe.fileHandleForWriting.close()
-		let data = try pipe.fileHandleForReading.readToEnd() ?? Data()
+		try pipe.fileHandleForWriting.jl_close()
+		let data = try pipe.fileHandleForReading.jl_readToEnd() ?? Data()
 		XCTAssertEqual(data.first, 0x0a)
 	}
 	
@@ -80,8 +91,8 @@ final class JSONLoggerTests : XCTestCase {
 		let pipe = Pipe()
 		let jsonLogger = JSONLogger(label: "best-logger", fileHandle: pipe.fileHandleForWriting)
 		jsonLogger.log(level: ref.level, message: "\(ref.message)", metadata: ["yolo": .stringConvertible(BestStruct(val: 21))], source: ref.source, file: ref.file, function: ref.function, line: ref.line)
-		try pipe.fileHandleForWriting.close()
-		let data = try pipe.fileHandleForReading.readToEnd() ?? Data()
+		try pipe.fileHandleForWriting.jl_close()
+		let data = try pipe.fileHandleForReading.jl_readToEnd() ?? Data()
 		//print(data.reduce("", { $0 + String(format: "%02x", $1) }))
 		var line = try Self.defaultJSONDecoder.decode(LogLine.self, from: data)
 		XCTAssertLessThanOrEqual(line.date.timeIntervalSince(ref.date), 0.1)
@@ -111,8 +122,8 @@ final class JSONLoggerTests : XCTestCase {
 		let pipe = Pipe()
 		let jsonLogger = JSONLogger(label: "best-logger", fileHandle: pipe.fileHandleForWriting, jsonEncoder: failEncoder)
 		jsonLogger.log(level: ref.level, message: "\(ref.message)", metadata: ["yolo": .stringConvertible(BestStruct(val: 21))], source: ref.source, file: ref.file, function: ref.function, line: ref.line)
-		try pipe.fileHandleForWriting.close()
-		let data = try pipe.fileHandleForReading.readToEnd() ?? Data()
+		try pipe.fileHandleForWriting.jl_close()
+		let data = try pipe.fileHandleForReading.jl_readToEnd() ?? Data()
 		var line = try Self.defaultJSONDecoder.decode(LogLine.self, from: data)
 		XCTAssertLessThanOrEqual(line.date.timeIntervalSince(ref.date), 0.1)
 		line.date = mangled.date
