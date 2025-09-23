@@ -36,7 +36,7 @@ extension FileHandle {
 			var ret = Data()
 			repeat {
 				nread = system_read(fileDescriptor, buffer.baseAddress, buffer.count)
-				ret += buffer
+				ret += buffer[0..<nread]
 			} while nread > 0
 			guard nread >= 0 else {
 				throw Errno()
@@ -51,7 +51,7 @@ extension FileHandle {
 			var ret = Data()
 			repeat {
 				nread = system_read(fileDescriptor, buffer.baseAddress, buffer.count)
-				ret += buffer
+				ret += buffer[0..<nread]
 			} while nread > 0
 			guard nread >= 0 else {
 				throw Errno()
