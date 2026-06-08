@@ -209,22 +209,22 @@ public struct JSONLogger : LogHandler {
 			 * For the date, we cannot know how the client would want the date to be encoded as we cannot use the JSONEncoder,
 			 *  so we use a special property LogLine will use when the date property is not present.
 			 * This “date-1970” contains the date, represented using the time interval since 1970. */
-			jsonLine = Data((
-				#"{"# +
-					#""level":"\#(level.rawValue.safifyForJSON())","# +
-					#""message":"MANGLED LOG MESSAGE (see JSONLogger doc) -- \#(logLine.message.safifyForJSON())","# +
-					#""metadata":{"# +
-						#""JSONLogger.LogInfo":"Original metadata removed (see JSONLogger doc)","# +
-						#""JSONLogger.LogError":"\#(String(describing: error).safifyForJSON())""# +
-					#"},"# +
-					#""date-1970":\#(logLine.date.timeIntervalSince1970),"# +
-					#""label":"\#(label.safifyForJSON())","# +
-					#""source":"\#(source.safifyForJSON())","# +
-					#""file":"\#(file.safifyForJSON())","# +
-					#""function":"\#(function.safifyForJSON())","# +
-					#""line":\#(line)"# +
+			jsonLine = Data([
+				#"{"#,
+					#""level":"\#(level.rawValue.safifyForJSON())","#,
+					#""message":"MANGLED LOG MESSAGE (see JSONLogger doc) -- \#(logLine.message.safifyForJSON())","#,
+					#""metadata":{"#,
+						#""JSONLogger.LogInfo":"Original metadata removed (see JSONLogger doc)","#,
+						#""JSONLogger.LogError":"\#(String(describing: error).safifyForJSON())""#,
+					#"},"#,
+					#""date-1970":\#(logLine.date.timeIntervalSince1970),"#,
+					#""label":"\#(label.safifyForJSON())","#,
+					#""source":"\#(source.safifyForJSON())","#,
+					#""file":"\#(file.safifyForJSON())","#,
+					#""function":"\#(function.safifyForJSON())","#,
+					#""line":\#(line)"#,
 				#"}"#
-			).utf8)
+			].joined().utf8)
 		}
 		let lineDataNoSeparator = prefix + jsonLine + suffix
 		
